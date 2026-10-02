@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meccanoid bench</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e4e7ea;--panel:#f4f5f6;--ink:#1b2430;--mute:#5d6975;--line:#b9c0c7;--red:#c8312b;--blue:#2a5d9f;--brass:#a97c2a;--ok:#2f7d4f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Barlow,system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;padding:16px 16px 0}
+h1{font:700 30px/1 "Barlow Condensed",system-ui,sans-serif;margin:0;letter-spacing:.01em}
+h2{font:600 19px/1.2 "Barlow Condensed",system-ui,sans-serif;margin:0 0 8px}
+.seg{display:flex;border:1px solid var(--ink);border-radius:6px;overflow:hidden}
+.seg button{font:inherit;font-weight:500;padding:7px 14px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+button:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+#banner{max-width:1100px;margin:12px auto 0;padding:9px 16px;font-weight:500;border-left:6px solid var(--brass);background:#ece3d0}
+#banner.live{border-color:var(--blue);background:#d9e4f2}
+#banner input{font:inherit;width:230px;max-width:100%;margin-left:8px;padding:3px 6px;border:1px solid var(--line);border-radius:4px}
+.wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;max-width:1100px;margin:0 auto;padding:16px}
+@media(max-width:800px){.wrap{grid-template-columns:1fr}}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.full{grid-column:1/-1}
+svg{display:block;width:100%;height:auto}
+.link{fill:#cfd5db;stroke:var(--ink);stroke-width:2}
+.servo{fill:var(--blue);stroke:var(--ink);stroke-width:2}
+.horn{fill:var(--brass);stroke:var(--ink);stroke-width:2}
+.finger{fill:var(--red);stroke:var(--ink);stroke-width:2}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-weight:500;color:var(--mute);text-align:left;padding:4px 6px 6px}
+td{padding:6px;border-top:1px solid var(--line);vertical-align:middle}
+input[type=range]{width:100%;min-width:90px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--line);margin-right:6px}
+.dot.on{background:var(--ok)}.dot.off{background:var(--red)}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+.nums b{display:block;font:700 26px/1.1 "Barlow Condensed",system-ui,sans-serif}
+.nums span{color:var(--mute);font-size:13px}
+#log{list-style:none;margin:0;padding:0;max-height:170px;overflow:auto;font:13px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap}
+#log li.bad{color:var(--red)}
+.note{color:var(--mute);font-size:13px;margin:8px 0 0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Meccanoid bench</h1>
+  <div class="seg" role="group" aria-label="Mode">
+    <button id="m-sim" aria-pressed="true">Experiment lab</button>
+    <button id="m-live" aria-pressed="false">Live dashboard</button>
+  </div>
+</header>
+<div id="banner"></div>
+
+<main class="wrap">
+  <section class="p" aria-label="Arm">
+    <h2>Arm</h2>
+    <svg viewBox="0 0 400 300" role="img" aria-label="Meccanoid arm with shoulder, elbow and wrist servos">
+      <defs><pattern id="holes" width="20" height="18" patternUnits="userSpaceOnUse"><circle cx="10" cy="9" r="3" fill="#8f98a1"/></pattern></defs>
+      <rect x="20" y="90" width="22" height="120" rx="4" class="link"/>
+      <g id="j0">
+        <rect x="0" y="-9" width="120" height="18" rx="9" class="link"/><rect x="0" y="-9" width="120" height="18" fill="url(#holes)"/>
+        <rect x="-20" y="-20" width="40" height="40" rx="5" class="servo"/><circle r="8" class="horn"/>
+        <g id="j1">
+          <rect x="0" y="-9" width="105" height="18" rx="9" class="link"/><rect x="0" y="-9" width="105" height="18" fill="url(#holes)"/>
+          <rect x="-17" y="-17" width="34" height="34" rx="5" class="servo"/><circle r="7" class="horn"/>
+          <g id="j2">
+            <rect x="-14" y="-14" width="28" height="28" rx="5" class="servo"/><circle r="6" class="horn"/>
+            <rect x="8" y="-16" width="38" height="8" rx="3" class="finger"/>
+            <rect x="8" y="8" width="38" height="8" rx="3" class="finger"/>
+          </g>
+        </g>
+      </g>
+    </svg>
+    <p class="note">Angle 90 is straight out. The servos are numbered by their place in the chain from the controller.</p>
+  </section>
+
+  <section class="p" aria-label="Servo chain">
+    <h2>Connected servos</h2>
+    <table>
+      <thead><tr><th>Joint</th><th>Slot</th><th>ID</th><th>Angle</th><th>Move</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="note">Servos report a chain slot and ID. A pin number belongs to the ESP32 side, where the whole chain shares one data line.</p>
+    <div style="margin-top:12px"><h2>LM server</h2><div id="lm">Checking</div></div>
+  </section>
+
+  <section class="p full" aria-label="Analytics">
+    <h2>Link analytics</h2>
+    <div class="nums">
+      <div><b id="n-last">-</b><span>Last round trip (ms)</span></div>
+      <div><b id="n-med">-</b><span>Median (ms)</span></div>
+      <div><b id="n-ok">0</b><span>Good reads</span></div>
+      <div><b id="n-err">0</b><span>Errors</span></div>
+    </div>
+    <svg viewBox="0 0 600 70" preserveAspectRatio="none" style="height:70px;background:#fff;border:1px solid var(--line);border-radius:4px" aria-label="Round trip time history"><polyline id="spark" fill="none" stroke="#2a5d9f" stroke-width="2"/></svg>
+    <ul id="log" style="margin-top:10px"></ul>
+  </section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s), wait=ms=>new Promise(r=>setTimeout(r,ms));
+const NAMES=['Shoulder','Elbow','Wrist'];
+let be, mode='sim', servos=[], lat=[], ok=0, err=0, connected=null, timer, lastSend=[0,0,0];
+
+async function timed(fn){const t=performance.now();const d=await fn();d._ms=Math.round(performance.now()-t);return d}
+
+const Sim={
+  s:[{id:1,deg:90,t:90},{id:2,deg:90,t:90},{id:3,deg:90,t:90}],
+  async read(){return timed(async()=>{await wait(15+Math.random()*25);this.s.forEach(v=>v.deg+=(v.t-v.deg)*.35);
+    return{servos:this.s.map(v=>({id:v.id,deg:Math.round(v.deg*10)/10,online:true}))}})},
+  async set(i,deg){return timed(async()=>{await wait(15+Math.random()*25);
+    if(Math.random()<.04)throw Error('Servo '+(i+1)+' did not answer (simulated fault)');this.s[i].t=deg;return{}})},
+  async lm(){await wait(10);return{up:true,models:['sim-model'],ms:Math.round(40+Math.random()*30)}}
+};
+const Live={
+  base:'http://localhost:8765',
+  req(path,opt){return timed(async()=>{const r=await fetch(this.base+path,opt);const d=await r.json();if(!r.ok)throw Error(d.error||r.status);return d})},
+  read(){return this.req('/api/servos')},
+  set(i,deg){return this.req('/api/servo/'+i,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deg})})},
+  lm(){return this.req('/api/lm')}
+};
+
+function log(m,bad){const li=document.createElement('li');if(bad)li.className='bad';li.textContent=new Date().toLocaleTimeString()+'  '+m;
+  const ul=$('#log');ul.prepend(li);while(ul.children.length>40)ul.lastChild.remove()}
+
+function buildRows(){
+  $('#rows').innerHTML=NAMES.map((n,i)=>`<tr><td>${n}</td><td>${i+1}</td><td id="id${i}">-</td><td id="ang${i}">-</td>
+  <td><input type="range" min="0" max="180" value="90" id="sl${i}" aria-label="${n} angle"></td>
+  <td id="st${i}"><span class="dot"></span>Waiting</td></tr>`).join('');
+  NAMES.forEach((n,i)=>$('#sl'+i).addEventListener('input',e=>send(i,+e.target.value)));
+}
+async function send(i,deg){
+  const now=performance.now();if(now-lastSend[i]<80)return;lastSend[i]=now;
+  try{const d=await be.set(i,deg);lat.push(d._ms)}catch(e){err++;log(NAMES[i]+': '+e.message,true)}
+}
+function setConn(c,msg){if(c===connected)return;connected=c;log(c?'Connected':'Connection lost: '+msg,!c)}
+
+async function poll(){
+  try{const d=await be.read();servos=d.servos;lat.push(d._ms);ok++;setConn(true)}
+  catch(e){err++;servos=[];setConn(false,e.message==='Failed to fetch'?'proxy not reachable at '+Live.base:e.message)}
+  if(lat.length>60)lat.splice(0,lat.length-60);
+  render();
+  try{const l=await be.lm();$('#lm').innerHTML=l.up?`<span class="dot on"></span>Up, ${l.models.length} model(s), answered in ${l.ms} ms`:`<span class="dot off"></span>Not answering`}
+  catch(e){$('#lm').innerHTML='<span class="dot off"></span>Not answering'}
+}
+function render(){
+  const r=['j0','j1','j2'],t=['translate(110,150)','translate(120,0)','translate(105,0)'];
+  NAMES.forEach((n,i)=>{
+    const s=servos[i];
+    if(s)$(`#${r[i]}`).setAttribute('transform',t[i]+' rotate('+(s.deg-90)+')');
+    $('#id'+i).textContent=s?s.id:'-';
+    $('#ang'+i).textContent=s?Math.round(s.deg)+'\u00b0':'-';
+    $('#st'+i).innerHTML=s?(s.online?'<span class="dot on"></span>Online':'<span class="dot off"></span>Offline'):'<span class="dot"></span>No data';
+    if(s&&document.activeElement!==$('#sl'+i))$('#sl'+i).value=s.deg;
+  });
+  const sorted=[...lat].sort((a,b)=>a-b);
+  $('#n-last').textContent=lat.length?lat[lat.length-1]:'-';
+  $('#n-med').textContent=sorted.length?sorted[sorted.length>>1]:'-';
+  $('#n-ok').textContent=ok;$('#n-err').textContent=err;
+  const max=Math.max(100,...lat);
+  $('#spark').setAttribute('points',lat.map((v,i)=>(i*600/59)+','+(66-v/max*60)).join(' '));
+}
+function setMode(m){
+  mode=m;be=m==='sim'?Sim:Live;ok=0;err=0;lat=[];servos=[];connected=null;
+  $('#m-sim').setAttribute('aria-pressed',m==='sim');$('#m-live').setAttribute('aria-pressed',m==='live');
+  const b=$('#banner');
+  if(m==='sim'){b.className='';b.textContent='Experiment lab: nothing is connected. This is a simulation, with occasional faults on purpose.'}
+  else{b.className='live';b.innerHTML='Live dashboard: proxy address <input id="base" value="'+Live.base+'" aria-label="Proxy address">';
+    $('#base').addEventListener('change',e=>{Live.base=e.target.value.replace(/\/$/,'');setMode('live')})}
+  log('Switched to '+(m==='sim'?'experiment lab':'live dashboard'));
+  clearInterval(timer);poll();timer=setInterval(poll,500);
+}
+$('#m-sim').onclick=()=>setMode('sim');$('#m-live').onclick=()=>setMode('live');
+buildRows();setMode('sim');
+</script>
+</body>
+</html>
